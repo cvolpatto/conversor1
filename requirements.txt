@@ -1,5 +1,6 @@
 streamlit
-pdfplumber
 pandas
+pdfplumber
 openpyxl
-camelot
+camelot-py[cv]==0.10.1
+PyPDF2==2.10.0
