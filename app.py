@@ -1,25 +1,30 @@
 import streamlit as st
 import os
-import tabula
+import pdfplumber
 import pandas as pd
 from io import BytesIO
 import time
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
-    # Extrair dados da tabela do PDF usando tabula
-    tables = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True)
+    # Extrair dados da tabela do PDF usando pdfplumber
+    all_data = []
+    with pdfplumber.open(pdf_path) as pdf:
+        num_pages = len(pdf.pages)
+        for i, page in enumerate(pdf.pages):
+            tables = page.extract_tables()
+            for table in tables:
+                df = pd.DataFrame(table)
+                all_data.append(df)
+            progress_bar.progress((i + 1) / num_pages)
 
     # Concatenar os DataFrames resultantes
-    df = pd.concat([table for table in tables], ignore_index=True)
+    df = pd.concat(all_data, ignore_index=True)
 
     # Ajustar número de colunas
     df = df.iloc[:, :num_columns]
 
     # Salvar os dados em um arquivo XLSX
     df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
-
-    # Atualizar barra de progresso
-    progress_bar.progress(100)
 
 def main():
     st.title("Conversor de PDF para Excel")
