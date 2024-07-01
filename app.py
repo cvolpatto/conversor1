@@ -4,7 +4,6 @@ import camelot
 import pandas as pd
 from io import BytesIO
 import time
-import camelot.io as camelot
 
 os.environ['OPENCV_IO_MAX_IMAGE_PIXELS'] = '2200000000'  # ou outro valor adequado para suas imagens
 
