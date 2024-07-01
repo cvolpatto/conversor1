@@ -12,15 +12,17 @@ def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
         for i, page in enumerate(pdf.pages):
             tables = page.extract_tables()
             for table in tables:
+                # Ajustar número de colunas para cada tabela
                 df = pd.DataFrame(table)
+                if df.shape[1] < num_columns:
+                    df = df.reindex(columns=range(num_columns), fill_value="")
+                else:
+                    df = df.iloc[:, :num_columns]
                 all_data.append(df)
             progress_bar.progress((i + 1) / num_pages)
 
     # Concatenar os DataFrames resultantes
     df = pd.concat(all_data, ignore_index=True)
-
-    # Ajustar número de colunas
-    df = df.iloc[:, :num_columns]
 
     # Salvar os dados em um arquivo XLSX
     df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
