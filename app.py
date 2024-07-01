@@ -3,7 +3,6 @@ import os
 import pdfplumber
 import pandas as pd
 from io import BytesIO
-import time
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
     # Extrair dados da tabela do PDF usando pdfplumber
