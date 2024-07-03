@@ -37,4 +37,26 @@ def main():
             progress_bar = st.progress(0)
             
             pdf_path = "temp_pdf.pdf"
-            xlsx_path = "
+            xlsx_path = "output_excel.xlsx"
+            
+            with open(pdf_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+            
+            try:
+                pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar)
+                
+                st.markdown("### Download do arquivo Excel gerado")
+                with open(xlsx_path, "rb") as f:
+                    bytes_data = f.read()
+                    st.download_button(label="Baixar Excel", data=BytesIO(bytes_data), file_name="output_excel.xlsx", key="download_button")
+            
+            except ValueError as e:
+                st.error(str(e))
+            finally:
+                if os.path.exists(pdf_path):
+                    os.remove(pdf_path)
+                if os.path.exists(xlsx_path):
+                    os.remove(xlsx_path)
+
+if __name__ == "__main__":
+    main()
