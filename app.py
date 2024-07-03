@@ -20,7 +20,9 @@ def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
             progress_bar.progress((i + 1) / num_pages)
 
     if all_data:
+        # Concatenate all dataframes, reset index, and handle column names
         df = pd.concat(all_data, ignore_index=True)
+        df.columns = [f'Col{i+1}' for i in range(num_columns)]
         df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
     else:
         raise ValueError("Nenhuma tabela foi extraída do PDF.")
