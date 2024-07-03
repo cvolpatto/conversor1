@@ -1,6 +1,6 @@
 streamlit
 pandas
+pdfplumber
 openpyxl
 camelot-py[cv]
-ghostscript
-opencv-python-headless
+PyPDF2==2.10.0
