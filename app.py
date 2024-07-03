@@ -5,14 +5,6 @@ from io import BytesIO
 from PyPDF2 import PdfReader
 import camelot
 
-def get_pages(filepath, pages):
-    reader = PdfReader(filepath)
-    num_pages = len(reader.pages)
-    if pages == "all":
-        return list(range(1, num_pages + 1))
-    else:
-        return [int(p) for p in pages.split(",")]
-
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
     all_data = []
     tables = camelot.read_pdf(pdf_path, pages='all', strip_text='\n', flavor='stream')
