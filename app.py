@@ -1,23 +1,24 @@
 import streamlit as st
 import os
-import tabula
+import pdfplumber
 import pandas as pd
 from io import BytesIO
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
-    # Extrair dados da tabela do PDF usando tabula-py
-    tables = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True)
-    
     all_data = []
-    for i, table in enumerate(tables):
-        df = pd.DataFrame(table)
-        if df.shape[1] < num_columns:
-            df = df.reindex(columns=range(num_columns), fill_value="")
-        elif df.shape[1] > num_columns:
-            df = df.iloc[:, :num_columns]
-        all_data.append(df)
-        progress_bar.progress((i + 1) / len(tables))
-    
+    with pdfplumber.open(pdf_path) as pdf:
+        num_pages = len(pdf.pages)
+        for i, page in enumerate(pdf.pages):
+            tables = page.extract_tables()
+            for table in tables:
+                df = pd.DataFrame(table)
+                if df.shape[1] < num_columns:
+                    df = df.reindex(columns=range(num_columns), fill_value="")
+                elif df.shape[1] > num_columns:
+                    df = df.iloc[:, :num_columns]
+                all_data.append(df)
+            progress_bar.progress((i + 1) / num_pages)
+
     if all_data:
         df = pd.concat(all_data, ignore_index=True)
         df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
