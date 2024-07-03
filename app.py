@@ -1,26 +1,24 @@
 import streamlit as st
 import os
-import pdfplumber
 import pandas as pd
 from io import BytesIO
+import camelot
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
     all_data = []
-    with pdfplumber.open(pdf_path) as pdf:
-        num_pages = len(pdf.pages)
-        for i, page in enumerate(pdf.pages):
-            tables = page.extract_tables()
-            for table in tables:
-                df = pd.DataFrame(table)
-                if df.shape[1] < num_columns:
-                    df = df.reindex(columns=range(num_columns), fill_value="")
-                elif df.shape[1] > num_columns:
-                    df = df.iloc[:, :num_columns]
-                all_data.append(df)
-            progress_bar.progress((i + 1) / num_pages)
+    tables = camelot.read_pdf(pdf_path, pages='all', strip_text='\n', flavor='stream')
+    num_pages = len(tables)
+
+    for i, table in enumerate(tables):
+        df = table.df
+        if df.shape[1] < num_columns:
+            df = df.reindex(columns=range(num_columns), fill_value="")
+        elif df.shape[1] > num_columns:
+            df = df.iloc[:, :num_columns]
+        all_data.append(df)
+        progress_bar.progress((i + 1) / num_pages)
 
     if all_data:
-        # Concatenate all dataframes, reset index, and handle column names
         df = pd.concat(all_data, ignore_index=True)
         df.columns = [f'Col{i+1}' for i in range(num_columns)]
         df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
