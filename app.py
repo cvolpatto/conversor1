@@ -2,7 +2,6 @@ import streamlit as st
 import os
 import pandas as pd
 from io import BytesIO
-from PyPDF2 import PdfReader
 import camelot
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
