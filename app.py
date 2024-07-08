@@ -1,8 +1,8 @@
 import streamlit as st
-import os
 import pandas as pd
 from io import BytesIO
 import pdfplumber
+import os
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
     all_data = []
@@ -19,11 +19,15 @@ def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
 
     if all_data:
         full_df = pd.concat(all_data, ignore_index=True)
+        full_df.columns = [f'Col{i+1}' for i in range(full_df.shape[1])]
+        
+        # Adiciona colunas vazias se o número de colunas for menor que o especificado
         if full_df.shape[1] < num_columns:
-            full_df = full_df.reindex(columns=range(num_columns), fill_value="")
-        elif full_df.shape[1] > num_columns:
-            full_df = full_df.iloc[:, :num_columns]
-        full_df.columns = [f'Col{i+1}' for i in range(num_columns)]
+            for i in range(num_columns - full_df.shape[1]):
+                full_df[f'Col{full_df.shape[1] + 1}'] = ''
+        
+        # Limita o número de colunas ao especificado
+        full_df = full_df.iloc[:, :num_columns]
         full_df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
     else:
         raise ValueError("Nenhuma tabela foi extraída do PDF.")
