@@ -14,17 +14,17 @@ def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
             tables = page.extract_tables()
             for table in tables:
                 df = pd.DataFrame(table)
-                if df.shape[1] < num_columns:
-                    df = df.reindex(columns=range(num_columns), fill_value="")
-                elif df.shape[1] > num_columns:
-                    df = df.iloc[:, :num_columns]
                 all_data.append(df)
             progress_bar.progress((i + 1) / num_pages)
 
     if all_data:
-        df = pd.concat(all_data, ignore_index=True)
-        df.columns = [f'Col{i+1}' for i in range(num_columns)]
-        df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
+        full_df = pd.concat(all_data, ignore_index=True)
+        if full_df.shape[1] < num_columns:
+            full_df = full_df.reindex(columns=range(num_columns), fill_value="")
+        elif full_df.shape[1] > num_columns:
+            full_df = full_df.iloc[:, :num_columns]
+        full_df.columns = [f'Col{i+1}' for i in range(num_columns)]
+        full_df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
     else:
         raise ValueError("Nenhuma tabela foi extraída do PDF.")
 
