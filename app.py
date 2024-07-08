@@ -3,6 +3,7 @@ import pandas as pd
 import camelot
 from io import BytesIO
 import os
+import camelot.io as camelot
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
     tables = camelot.read_pdf(pdf_path, pages='all', flavor='stream')
