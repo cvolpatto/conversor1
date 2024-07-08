@@ -1,21 +1,17 @@
 import streamlit as st
 import pandas as pd
+import camelot
 from io import BytesIO
-import pdfplumber
 import os
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
+    tables = camelot.read_pdf(pdf_path, pages='all', flavor='stream')
     all_data = []
 
-    with pdfplumber.open(pdf_path) as pdf:
-        num_pages = len(pdf.pages)
-
-        for i, page in enumerate(pdf.pages):
-            tables = page.extract_tables()
-            for table in tables:
-                df = pd.DataFrame(table)
-                all_data.append(df)
-            progress_bar.progress((i + 1) / num_pages)
+    for i, table in enumerate(tables):
+        df = table.df
+        all_data.append(df)
+        progress_bar.progress((i + 1) / len(tables))
 
     if all_data:
         full_df = pd.concat(all_data, ignore_index=True)
@@ -60,7 +56,7 @@ def main():
             except ValueError as e:
                 st.error(str(e))
             finally:
-                if os.path.exists(pdf_path):
+                if os.path.exists
                     os.remove(pdf_path)
                 if os.path.exists(xlsx_path):
                     os.remove(xlsx_path)
