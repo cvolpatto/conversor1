@@ -3,50 +3,30 @@ import pandas as pd
 import fitz  # PyMuPDF
 from io import BytesIO
 import os
+import tabula
 
 def extract_tables_from_pdf(pdf_path):
-    pdf_document = fitz.open(pdf_path)
-    all_text = []
-    for page_num in range(len(pdf_document)):
-        page = pdf_document.load_page(page_num)
-        text = page.get_text("text")
-        all_text.append(text)
-    return all_text
+    # Use tabula to extract tables from the PDF
+    tables = tabula.read_pdf(pdf_path, pages='all', multiple_tables=True)
+    return tables
 
-def text_to_dataframe(text, num_columns):
-    rows = text.split('\n')
-    data = []
-    current_row = []
-    
-    for row in rows:
-        columns = row.split()
-        
-        # Continue adding columns to the current row until we reach the required number of columns
-        current_row.extend(columns)
-        
-        # If the current row has the required number of columns, add it to the data and start a new row
-        while len(current_row) >= num_columns:
-            data.append(current_row[:num_columns])
-            current_row = current_row[num_columns:]
-    
-    # Convert list of lists to DataFrame
-    df = pd.DataFrame(data, columns=[f'Col{i+1}' for i in range(num_columns)])
-    
-    return df
+def merge_dataframes(dataframes):
+    # Concatenate all dataframes into one
+    full_df = pd.concat(dataframes, ignore_index=True)
+    return full_df
 
-def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
-    all_text = extract_tables_from_pdf(pdf_path)
+def pdf_to_xlsx(pdf_path, xlsx_path, progress_bar):
+    tables = extract_tables_from_pdf(pdf_path)
+    if not tables:
+        raise ValueError("Nenhuma tabela foi extraída do PDF.")
+    
     all_dataframes = []
-    for i, text in enumerate(all_text):
-        df = text_to_dataframe(text, num_columns)
+    for i, df in enumerate(tables):
         all_dataframes.append(df)
-        progress_bar.progress((i + 1) / len(all_text))
+        progress_bar.progress((i + 1) / len(tables))
 
-    if all_dataframes:
-        full_df = pd.concat(all_dataframes, ignore_index=True)
-        full_df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
-    else:
-        raise ValueError("Nenhum texto foi extraído do PDF.")
+    full_df = merge_dataframes(all_dataframes)
+    full_df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
 
 def main():
     st.title("Conversor de PDF para Excel")
@@ -54,8 +34,6 @@ def main():
     uploaded_file = st.file_uploader("Escolha um arquivo PDF", type="pdf")
     
     if uploaded_file is not None:
-        num_columns = st.number_input("Digite o número de colunas para a conversão:", min_value=1, value=8)
-        
         if st.button("Iniciar Conversão"):
             progress_bar = st.progress(0)
             
@@ -66,7 +44,7 @@ def main():
                 f.write(uploaded_file.getbuffer())
             
             try:
-                pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar)
+                pdf_to_xlsx(pdf_path, xlsx_path, progress_bar)
                 
                 st.markdown("### Download do arquivo Excel gerado")
                 with open(xlsx_path, "rb") as f:
