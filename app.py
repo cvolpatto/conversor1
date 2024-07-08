@@ -4,7 +4,7 @@ import fitz  # PyMuPDF
 from io import BytesIO
 import os
 
-def extract_text_from_pdf(pdf_path):
+def extract_tables_from_pdf(pdf_path):
     pdf_document = fitz.open(pdf_path)
     all_text = []
     for page_num in range(len(pdf_document)):
@@ -28,7 +28,7 @@ def text_to_dataframe(text, num_columns):
     return df
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
-    all_text = extract_text_from_pdf(pdf_path)
+    all_text = extract_tables_from_pdf(pdf_path)
     all_dataframes = []
     for i, text in enumerate(all_text):
         df = text_to_dataframe(text, num_columns)
