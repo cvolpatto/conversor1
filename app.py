@@ -56,7 +56,7 @@ def main():
             except ValueError as e:
                 st.error(str(e))
             finally:
-                if os.path.exists
+                if os.path.exists(pdf_path):
                     os.remove(pdf_path)
                 if os.path.exists(xlsx_path):
                     os.remove(xlsx_path)
