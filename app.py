@@ -16,17 +16,21 @@ def extract_tables_from_pdf(pdf_path):
 def text_to_dataframe(text, num_columns):
     rows = text.split('\n')
     data = []
+    current_row = []
+    
     for row in rows:
         columns = row.split()
-        data.append(columns)
-
-    # Convert list of lists to DataFrame
-    df = pd.DataFrame(data)
+        
+        # Continue adding columns to the current row until we reach the required number of columns
+        current_row.extend(columns)
+        
+        # If the current row has the required number of columns, add it to the data and start a new row
+        while len(current_row) >= num_columns:
+            data.append(current_row[:num_columns])
+            current_row = current_row[num_columns:]
     
-    # Adjust DataFrame to have the specified number of columns
-    df = df.apply(lambda x: x.str.split(expand=True).stack()).unstack()
-    df = df.iloc[:, :num_columns]
-    df.columns = [f'Col{i+1}' for i in range(num_columns)]
+    # Convert list of lists to DataFrame
+    df = pd.DataFrame(data, columns=[f'Col{i+1}' for i in range(num_columns)])
     
     return df
 
