@@ -18,13 +18,16 @@ def text_to_dataframe(text, num_columns):
     data = []
     for row in rows:
         columns = row.split()
-        if len(columns) < num_columns:
-            columns += [''] * (num_columns - len(columns))
-        elif len(columns) > num_columns:
-            columns = columns[:num_columns]
         data.append(columns)
+
+    # Convert list of lists to DataFrame
     df = pd.DataFrame(data)
+    
+    # Adjust DataFrame to have the specified number of columns
+    df = df.apply(lambda x: x.str.split(expand=True).stack()).unstack()
+    df = df.iloc[:, :num_columns]
     df.columns = [f'Col{i+1}' for i in range(num_columns)]
+    
     return df
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
