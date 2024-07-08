@@ -1,6 +1,4 @@
 streamlit
 pandas
-camelot-py[cv]
+pdfplumber
 openpyxl
-PyPDF2==2.10.5
-opencv-python-headless
