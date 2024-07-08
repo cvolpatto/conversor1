@@ -1,33 +1,45 @@
 import streamlit as st
 import pandas as pd
-import camelot
+import fitz  # PyMuPDF
 from io import BytesIO
 import os
-import camelot.io as camelot
+
+def extract_text_from_pdf(pdf_path):
+    pdf_document = fitz.open(pdf_path)
+    all_text = []
+    for page_num in range(len(pdf_document)):
+        page = pdf_document.load_page(page_num)
+        text = page.get_text("text")
+        all_text.append(text)
+    return all_text
+
+def text_to_dataframe(text, num_columns):
+    rows = text.split('\n')
+    data = []
+    for row in rows:
+        columns = row.split()
+        if len(columns) < num_columns:
+            columns += [''] * (num_columns - len(columns))
+        elif len(columns) > num_columns:
+            columns = columns[:num_columns]
+        data.append(columns)
+    df = pd.DataFrame(data)
+    df.columns = [f'Col{i+1}' for i in range(num_columns)]
+    return df
 
 def pdf_to_xlsx(pdf_path, xlsx_path, num_columns, progress_bar):
-    tables = camelot.read_pdf(pdf_path, pages='all', flavor='stream')
-    all_data = []
+    all_text = extract_text_from_pdf(pdf_path)
+    all_dataframes = []
+    for i, text in enumerate(all_text):
+        df = text_to_dataframe(text, num_columns)
+        all_dataframes.append(df)
+        progress_bar.progress((i + 1) / len(all_text))
 
-    for i, table in enumerate(tables):
-        df = table.df
-        all_data.append(df)
-        progress_bar.progress((i + 1) / len(tables))
-
-    if all_data:
-        full_df = pd.concat(all_data, ignore_index=True)
-        full_df.columns = [f'Col{i+1}' for i in range(full_df.shape[1])]
-
-        # Adiciona colunas vazias se o número de colunas for menor que o especificado
-        if full_df.shape[1] < num_columns:
-            for i in range(num_columns - full_df.shape[1]):
-                full_df[f'Col{full_df.shape[1] + 1}'] = ''
-
-        # Limita o número de colunas ao especificado
-        full_df = full_df.iloc[:, :num_columns]
+    if all_dataframes:
+        full_df = pd.concat(all_dataframes, ignore_index=True)
         full_df.to_excel(xlsx_path, index=False, sheet_name='Sheet1')
     else:
-        raise ValueError("Nenhuma tabela foi extraída do PDF.")
+        raise ValueError("Nenhum texto foi extraído do PDF.")
 
 def main():
     st.title("Conversor de PDF para Excel")
